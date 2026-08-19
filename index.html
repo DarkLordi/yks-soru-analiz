@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YKS Günlük Soru Defteri</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Source+Sans+3:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="hero">
+        <div>
+          <p class="kicker">YKS soru defteri</p>
+          <h1>Bugün kaç soru çözdün?</h1>
+          <p class="lede">
+            Ders ders doğru, yanlış ve boş sayılarını yaz. Kayıt bu bilgisayardaki ortak
+            SQLite dosyasına gider; Chrome veya Safari fark etmez, geçmiş aynı kalır.
+          </p>
+        </div>
+        <div class="date-card">
+          <label for="date">Kayıt günü</label>
+          <input id="date" type="date" />
+          <p class="hint" id="date-label"></p>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Günlük kayıt</h2>
+              <p class="hint">Sadece çalıştığın dersleri doldurman yeterli.</p>
+            </div>
+          </div>
+
+          <div class="tracks" id="tracks"></div>
+          <div class="subjects" id="subjects"></div>
+
+          <textarea
+            id="notes"
+            class="notes"
+            placeholder="Günün notu: tempo, deneme, takıldığın konu..."
+          ></textarea>
+
+          <div class="actions">
+            <button class="primary" id="save" type="button">Yerel veritabanına kaydet</button>
+            <button class="ghost" id="today" type="button">Bugüne dön</button>
+            <button class="danger" id="delete" type="button">Günü sil</button>
+          </div>
+          <p class="status" id="status"></p>
+        </section>
+
+        <aside class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Geçmiş</h2>
+              <p class="hint">Kayıtlı günler grafik ve özet olarak görünür.</p>
+            </div>
+            <div class="range" id="range"></div>
+          </div>
+
+          <div class="stats">
+            <div class="stat">
+              <b id="stat-day">0</b>
+              <span>Seçili gün</span>
+            </div>
+            <div class="stat">
+              <b id="stat-net">0</b>
+              <span>Gün neti</span>
+            </div>
+            <div class="stat">
+              <b id="stat-all">0</b>
+              <span>Toplam soru</span>
+            </div>
+          </div>
+          <p class="hint" id="streak"></p>
+
+          <h3>Günlük soru sayısı</h3>
+          <div class="chart-box">
+            <canvas id="line-chart"></canvas>
+            <p class="empty" id="line-empty">Henüz grafik için kayıt yok.</p>
+          </div>
+
+          <h3 class="chart-title">Derslere göre toplam</h3>
+          <div class="chart-box tall">
+            <canvas id="bar-chart"></canvas>
+            <p class="empty" id="bar-empty">Ders dağılımı için en az bir kayıt gerekir.</p>
+          </div>
+        </aside>
+      </main>
+
+      <footer class="note">
+        Ortak veritabanı için uygulamayı <code>python3 server.py</code> ile aç.
+        Tarayıcılar <code>http://127.0.0.1:5173</code> adresine bağlanır; kayıtlar
+        <code>yks.db</code> dosyasında durur.
+      </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

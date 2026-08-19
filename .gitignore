@@ -1,0 +1,20 @@
+# Veritabanı (kişisel soru kayıtları)
+yks.db
+yks.db-journal
+yks.db-wal
+yks.db-shm
+*.db
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Araç çıktıları
+node_modules/
+dist/
+.DS_Store
+*.log
+.env
+.env.*
