@@ -34,6 +34,7 @@ const state = {
 
 let lineChart;
 let barChart;
+let dayChart;
 
 function emptyRow() {
   return { correct: 0, wrong: 0, blank: 0 };
@@ -289,6 +290,7 @@ async function loadDate(date) {
   document.querySelector("#notes").value = state.notes;
   resetTable();
   renderStats();
+  renderCharts();
 }
 
 function setStatus(text) {
@@ -437,14 +439,29 @@ function subjectBars() {
   }).filter((row) => row.TYT + row.AYT + row.YDT > 0);
 }
 
+function selectedDayBars() {
+  const current = addCounts(savedCountsForDate(state.date), state.counts);
+  const totals = { label: shortDate(state.date), TYT: 0, AYT: 0, YDT: 0 };
+  for (const track of TRACKS) {
+    totals[track] = Array.from(SUBJECTS).reduce((sum, subject) => {
+      return sum + trackTotal(current, subject.id, track);
+    }, 0);
+  }
+  return totals;
+}
+
 function renderCharts() {
   const points = chartPoints();
   const bars = subjectBars();
+  const selectedDay = selectedDayBars();
   const hasLogs = state.logs.length > 0;
+  const hasSelectedDayData = selectedDay.TYT + selectedDay.AYT + selectedDay.YDT > 0;
   document.querySelector("#line-empty").classList.toggle("visible", !hasLogs);
   document.querySelector("#bar-empty").classList.toggle("visible", bars.length === 0);
+  document.querySelector("#day-empty").classList.toggle("visible", !hasSelectedDayData);
   document.querySelector("#line-chart").style.display = hasLogs ? "block" : "none";
   document.querySelector("#bar-chart").style.display = bars.length ? "block" : "none";
+  document.querySelector("#day-chart").style.display = hasSelectedDayData ? "block" : "none";
 
   const grid = "#ead9b8";
   const common = {
@@ -526,6 +543,50 @@ function renderCharts() {
             type: "linear",
             beginAtZero: true,
             suggestedMax: stackedMax,
+            ticks: { color: "#5a4b3b", precision: 0 },
+            grid: { color: grid },
+          },
+        },
+      },
+    });
+  }
+
+  if (dayChart) {
+    dayChart.destroy();
+    dayChart = undefined;
+  }
+
+  const dayDatasets = ["TYT", "AYT"].map((track) => ({
+    label: track,
+    data: [selectedDay[track]],
+    backgroundColor: TRACK_COLORS[track],
+    borderRadius: 4,
+    stack: "selected-day",
+  })).filter((dataset) => dataset.data[0] > 0);
+
+  if (dayDatasets.length) {
+    dayChart = new Chart(document.querySelector("#day-chart"), {
+      type: "bar",
+      data: {
+        labels: [selectedDay.label],
+        datasets: dayDatasets,
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: "#241c14" } },
+        },
+        scales: {
+          x: {
+            stacked: true,
+            ticks: { color: "#5a4b3b" },
+            grid: { display: false },
+          },
+          y: {
+            stacked: true,
+            type: "linear",
+            beginAtZero: true,
             ticks: { color: "#5a4b3b", precision: 0 },
             grid: { color: grid },
           },

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import webbrowser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -122,9 +123,11 @@ class Handler(SimpleHTTPRequestHandler):
 def main() -> None:
     connect().close()
     server = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
-    print(f"YKS soru defteri: http://127.0.0.1:{PORT}")
+    url = f"http://127.0.0.1:{PORT}"
+    print(f"YKS soru defteri: {url}")
     print(f"Ortak veritabanı: {DB_PATH}")
     print("Chrome, Safari, Firefox aynı adresi açınca aynı kayıtları görür.")
+    webbrowser.open(url, new=2)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
