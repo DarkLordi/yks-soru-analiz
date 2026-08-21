@@ -27,6 +27,8 @@ const state = {
   date: todayISO(),
   track: "TYT",
   range: 30,
+  rangeStart: null,
+  rangeEnd: null,
   notes: "",
   counts: emptyCounts(),
   logs: [],
@@ -320,15 +322,45 @@ function renderRange() {
   for (const days of RANGES) {
     const button = document.createElement("button");
     button.type = "button";
-    button.className = `chip ${state.range === days ? "active" : ""}`;
+    button.className = `chip ${!state.rangeStart && !state.rangeEnd && state.range === days ? "active" : ""}`;
     button.textContent = `${days}g`;
     button.addEventListener("click", () => {
       state.range = days;
+      state.rangeStart = null;
+      state.rangeEnd = null;
       renderRange();
       renderCharts();
     });
     root.append(button);
   }
+
+  const customButton = document.createElement("button");
+  customButton.type = "button";
+  customButton.className = `chip ${state.rangeStart && state.rangeEnd ? "active" : ""}`;
+  customButton.textContent = state.rangeStart && state.rangeEnd
+    ? `${shortDate(state.rangeStart)} → ${shortDate(state.rangeEnd)}`
+    : "Tarih aralığı";
+  customButton.addEventListener("click", () => {
+    const start = window.prompt(
+      "Başlangıç tarihini seçin (YYYY-MM-DD):",
+      state.rangeStart ?? todayISO(),
+    );
+    if (!start) return;
+    const end = window.prompt(
+      "Bitiş tarihini seçin (YYYY-MM-DD):",
+      state.rangeEnd ?? todayISO(),
+    );
+    if (!end) return;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end)) {
+      window.alert("Tarih formatı YYYY-MM-DD olmalıdır.");
+      return;
+    }
+    state.rangeStart = start;
+    state.rangeEnd = end;
+    renderRange();
+    renderCharts();
+  });
+  root.append(customButton);
 }
 
 function renderSubjects() {
@@ -412,10 +444,26 @@ function renderStats() {
 function chartPoints() {
   const byDate = new Map(state.logs.map((log) => [log.date, log]));
   const days = [];
-  for (let offset = state.range - 1; offset >= 0; offset -= 1) {
-    const day = new Date();
-    day.setDate(day.getDate() - offset);
-    const iso = toISODate(day);
+  const rangeDates = [];
+
+  if (state.rangeStart && state.rangeEnd) {
+    const start = parseISO(state.rangeStart);
+    const end = parseISO(state.rangeEnd);
+    const cursor = new Date(Math.min(start.getTime(), end.getTime()));
+    const limit = new Date(Math.max(start.getTime(), end.getTime()));
+    while (cursor <= limit) {
+      rangeDates.push(toISODate(cursor));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+  } else {
+    for (let offset = state.range - 1; offset >= 0; offset -= 1) {
+      const day = new Date();
+      day.setDate(day.getDate() - offset);
+      rangeDates.push(toISODate(day));
+    }
+  }
+
+  for (const iso of rangeDates) {
     const log = byDate.get(iso);
     const counts = log?.counts ?? emptyCounts();
     days.push({
@@ -424,6 +472,7 @@ function chartPoints() {
       net: netScore(counts),
     });
   }
+
   return days;
 }
 
@@ -441,13 +490,13 @@ function subjectBars() {
 
 function selectedDayBars() {
   const current = addCounts(savedCountsForDate(state.date), state.counts);
-  const totals = { label: shortDate(state.date), TYT: 0, AYT: 0, YDT: 0 };
-  for (const track of TRACKS) {
-    totals[track] = Array.from(SUBJECTS).reduce((sum, subject) => {
-      return sum + trackTotal(current, subject.id, track);
-    }, 0);
-  }
-  return totals;
+  return SUBJECTS.map((subject) => {
+    const total = TRACKS.reduce((sum, track) => sum + trackTotal(current, subject.id, track), 0);
+    return {
+      label: subject.label,
+      total,
+    };
+  }).filter((row) => row.total > 0);
 }
 
 function renderCharts() {
@@ -455,7 +504,7 @@ function renderCharts() {
   const bars = subjectBars();
   const selectedDay = selectedDayBars();
   const hasLogs = state.logs.length > 0;
-  const hasSelectedDayData = selectedDay.TYT + selectedDay.AYT + selectedDay.YDT > 0;
+  const hasSelectedDayData = selectedDay.length > 0;
   document.querySelector("#line-empty").classList.toggle("visible", !hasLogs);
   document.querySelector("#bar-empty").classList.toggle("visible", bars.length === 0);
   document.querySelector("#day-empty").classList.toggle("visible", !hasSelectedDayData);
@@ -556,35 +605,37 @@ function renderCharts() {
     dayChart = undefined;
   }
 
-  const dayDatasets = ["TYT", "AYT"].map((track) => ({
-    label: track,
-    data: [selectedDay[track]],
-    backgroundColor: TRACK_COLORS[track],
-    borderRadius: 4,
-    stack: "selected-day",
-  })).filter((dataset) => dataset.data[0] > 0);
-
-  if (dayDatasets.length) {
+  if (selectedDay.length) {
     dayChart = new Chart(document.querySelector("#day-chart"), {
       type: "bar",
       data: {
-        labels: [selectedDay.label],
-        datasets: dayDatasets,
+        labels: selectedDay.map((row) => row.label),
+        datasets: [
+          {
+            label: "soru",
+            data: selectedDay.map((row) => row.total),
+            backgroundColor: selectedDay.map((row) => {
+              const total = row.total;
+              if (total <= 15) return "#d9a26a";
+              if (total <= 30) return "#c24a2a";
+              return "#7e3d2d";
+            }),
+            borderRadius: 4,
+          },
+        ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { labels: { color: "#241c14" } },
+          legend: { display: false, labels: { color: "#241c14" } },
         },
         scales: {
           x: {
-            stacked: true,
             ticks: { color: "#5a4b3b" },
             grid: { display: false },
           },
           y: {
-            stacked: true,
             type: "linear",
             beginAtZero: true,
             ticks: { color: "#5a4b3b", precision: 0 },
