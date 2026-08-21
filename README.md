@@ -12,12 +12,6 @@ Python 3 yeterlidir; ek paket kurulmaz.
 python3 server.py
 ```
 
-Tarayıcıda aç:
-
-[http://127.0.0.1:5173](http://127.0.0.1:5173)
-
-`index.html` dosyasına çift tıklama (`file://`) ortak veritabanına bağlanmaz. Sunucu açık kalmalıdır.
-
 ## Kullanım
 
 1. TYT / AYT / YDT seç.
