@@ -516,7 +516,11 @@ function renderCharts() {
   const common = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { labels: { color: "#241c14" } } },
+    interaction: { mode: "index", intersect: false },
+    plugins: {
+      legend: { labels: { color: "#241c14" } },
+      tooltip: { mode: "index", intersect: false },
+    },
     scales: {
       x: { ticks: { color: "#5a4b3b" }, grid: { color: grid } },
       y: { ticks: { color: "#5a4b3b" }, grid: { color: grid }, beginAtZero: true },
@@ -578,8 +582,10 @@ function renderCharts() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
         plugins: {
           legend: { labels: { color: "#241c14" } },
+          tooltip: { mode: "index", intersect: false },
         },
         scales: {
           x: {
@@ -627,8 +633,10 @@ function renderCharts() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
         plugins: {
           legend: { display: false, labels: { color: "#241c14" } },
+          tooltip: { mode: "index", intersect: false },
         },
         scales: {
           x: {
